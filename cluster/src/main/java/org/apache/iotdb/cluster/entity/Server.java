@@ -35,10 +35,6 @@ import org.apache.iotdb.cluster.rpc.raft.impl.RaftNodeAsClientManager;
 import org.apache.iotdb.cluster.rpc.raft.processor.QueryMetricAsyncProcessor;
 import org.apache.iotdb.cluster.rpc.raft.processor.nonquery.DataGroupNonQueryAsyncProcessor;
 import org.apache.iotdb.cluster.rpc.raft.processor.nonquery.MetaGroupNonQueryAsyncProcessor;
-import org.apache.iotdb.cluster.rpc.raft.processor.querydata.CloseSeriesReaderSyncProcessor;
-import org.apache.iotdb.cluster.rpc.raft.processor.querydata.InitSeriesReaderSyncProcessor;
-import org.apache.iotdb.cluster.rpc.raft.processor.querydata.QuerySeriesDataByTimestampSyncProcessor;
-import org.apache.iotdb.cluster.rpc.raft.processor.querydata.QuerySeriesDataSyncProcessor;
 import org.apache.iotdb.cluster.rpc.raft.processor.querymetadata.QueryMetadataAsyncProcessor;
 import org.apache.iotdb.cluster.rpc.raft.processor.querymetadata.QueryMetadataInStringAsyncProcessor;
 import org.apache.iotdb.cluster.rpc.raft.processor.querymetadata.QueryPathsAsyncProcessor;
@@ -47,11 +43,9 @@ import org.apache.iotdb.cluster.rpc.raft.processor.querymetadata.QueryTimeSeries
 import org.apache.iotdb.cluster.utils.RaftUtils;
 import org.apache.iotdb.cluster.utils.hash.PhysicalNode;
 import org.apache.iotdb.cluster.utils.hash.Router;
-import org.apache.iotdb.db.exception.StartupException;
 import org.apache.iotdb.db.exception.ProcessorException;
 import org.apache.iotdb.db.service.IoTDB;
 import org.apache.iotdb.db.service.RegisterManager;
-import org.apache.iotdb.cluster.service.ClusterMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +102,6 @@ public class Server {
 
     registerNonQueryProcessor(rpcServer);
     registerQueryMetadataProcessor(rpcServer);
-    registerQueryDataProcessor(rpcServer);
     registerQueryMetricProcessor(rpcServer);
 
     metadataHolder = new MetadataRaftHolder(peerIds, serverId, rpcServer, true);
@@ -133,12 +126,6 @@ public class Server {
       Router.getInstance().showPhysicalNodes(groupId);
     }
 
-    try {
-      LOGGER.info("Register Cluster Monitor to JMX service.");
-      registerManager.register(ClusterMonitor.INSTANCE);
-    } catch (StartupException e) {
-      stop();
-    }
   }
 
   private void registerNonQueryProcessor(RpcServer rpcServer) {
@@ -152,13 +139,6 @@ public class Server {
     rpcServer.registerUserProcessor(new QueryMetadataAsyncProcessor());
     rpcServer.registerUserProcessor(new QuerySeriesTypeAsyncProcessor());
     rpcServer.registerUserProcessor(new QueryPathsAsyncProcessor());
-  }
-
-  private void registerQueryDataProcessor(RpcServer rpcServer) {
-    rpcServer.registerUserProcessor(new InitSeriesReaderSyncProcessor());
-    rpcServer.registerUserProcessor(new QuerySeriesDataSyncProcessor());
-    rpcServer.registerUserProcessor(new QuerySeriesDataByTimestampSyncProcessor());
-    rpcServer.registerUserProcessor(new CloseSeriesReaderSyncProcessor());
   }
 
   private void registerQueryMetricProcessor(RpcServer rpcServer) {
